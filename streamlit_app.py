@@ -30,12 +30,24 @@ if ingredients_list:
 
     for fruit_chosen in ingredients_list:
       ingredients_string += fruit_chosen + ' '
-      st.subheader(fruit_chosen + 'Nutrition Information')
-      smoothiefroot_response = requests.get("https://my.smoothiefroot.com/api/fruit/" + fruit_chosen)
-      sf_df = st.dataframe(data=smoothiefroot_response.json() , use_container_width=True)
-        
+      st.subheader(fruit_chosen + ' Nutrition Information')
 
-    st.write(ingredients_string)
+      # Get SEARCH_ON value from Snowflake
+      search_value = session.table("smoothies.public.fruit_options") \
+          .select(col("SEARCH_ON")) \
+          .filter(col("FRUIT_NAME") == fruit_chosen) \
+          .collect()[0]["SEARCH_ON"]
+  
+      smoothiefroot_response = requests.get(
+          "https://my.smoothiefroot.com/api/fruit/" + search_value
+      )
+  
+      sf_df = st.dataframe(
+          data=smoothiefroot_response.json(),
+          use_container_width=True
+      )
+  
+      #st.write(ingredients_string)
 
     my_insert_stmt = """insert into smoothies.public.orders
         (ingredients, name_on_order)
